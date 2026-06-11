@@ -1,0 +1,29 @@
+\chapter{Third-Party Provider Integration Tests} \label{cap:thirdparty}
+
+Provider integration tests are located in \texttt{src/test/java/com/example/meetings/discover/ProviderIntegrationTest.java}.
+
+These tests use \texttt{MockRestServiceServer} to verify the integration contract without depending on live Ticketmaster, SeatGeek, or AgendaLx services. This choice avoids network flakiness, API credentials, rate limits, and changing third-party data. The providers still execute their real mapping and error-handling code; only the remote HTTP endpoint is simulated.
+
+Covered behavior includes:
+
+\begin{itemize}
+\item Ticketmaster response mapping.
+\item Ticketmaster unconfigured state.
+\item Ticketmaster malformed event filtering.
+\item Ticketmaster HTTP error handling.
+\item Ticketmaster query parameter encoding.
+\item SeatGeek response mapping.
+\item SeatGeek fallback from \texttt{title} to \texttt{short\_title}.
+\item SeatGeek malformed event filtering.
+\item SeatGeek HTTP error handling.
+\item AgendaLx response mapping.
+\item AgendaLx user-agent usage.
+\item AgendaLx past occurrence filtering.
+\item AgendaLx blank title filtering.
+\item AgendaLx fallback to 20:00 Europe/Lisbon when no time is parseable.
+\item AgendaLx HTTP error handling.
+\end{itemize}
+
+The Ticketmaster query-encoding test intentionally fails. It asserts that query parameters such as spaces should be encoded exactly once, but the current provider produces \texttt{\%2520}, showing that an already-encoded value is encoded a second time.
+
+The discovery-level provider aggregation behavior is tested separately in \texttt{DiscoveryServiceTest}. That test verifies that an outage in one configured provider should not prevent results from other providers. It currently errors because \texttt{DiscoveryService} does not catch provider exceptions.

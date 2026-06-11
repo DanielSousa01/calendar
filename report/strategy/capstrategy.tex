@@ -1,0 +1,33 @@
+\chapter{Test Strategy} \label{cap:strategy}
+
+The test suite follows the assignment requirements directly. Each required category is represented by a dedicated test class or group of test classes:
+
+\begin{table}[H]
+\centering
+\begin{tabular}{p{0.36\textwidth}p{0.54\textwidth}}
+\toprule
+\textbf{Assignment requirement} & \textbf{Implemented evidence} \\
+\midrule
+Unit tests for business logic & \texttt{MeetingServiceTest}, \texttt{UserServiceTest}, and \texttt{ICalServiceTest}. Collaborators are mocked where the service under test should be isolated. \\
+Integration tests for third-party sources & \texttt{ProviderIntegrationTest}. HTTP calls are simulated with \texttt{MockRestServiceServer}. \\
+Integration tests at REST/API level & \texttt{RestApiIntegrationTest}. The Spring context, security filters, CSRF handling, controllers, services, repositories, and views are exercised through \texttt{MockMvc}. \\
+Integration tests with a concrete database & \texttt{MeetingRepositoryIntegrationTest}. Repository queries run against H2 instead of mocked repositories. \\
+End-to-end tests with Selenium and a testing database & \texttt{SeleniumEndToEndTest}. The application starts on a random port with H2 and is driven through headless Chrome. \\
+\bottomrule
+\end{tabular}
+\caption{Mapping between assignment requirements and implemented tests.}
+\end{table}
+
+The suite is organized by testing level so that failures identify the layer where a regression was introduced:
+
+\begin{itemize}
+\item Unit tests isolate business rules with mocked repositories and collaborators.
+\item Provider integration tests exercise HTTP integration code with mocked HTTP servers instead of real third-party services.
+\item REST API integration tests run the Spring web layer through \texttt{MockMvc}, including security and CSRF behavior.
+\item Repository integration tests use a concrete H2 database and real JPA queries.
+\item End-to-end tests use Selenium against a real Spring Boot server and testing database.
+\end{itemize}
+
+The tests prefer deterministic dependencies. External providers are not contacted live, because live tests would be flaky, slower, and dependent on credentials, rate limits, and internet availability. The REST and Selenium tests use in-memory H2 databases so they do not modify local development data or require the production database.
+
+Some tests are intentionally bug-revealing. Those tests assert the behavior the application should have, not the behavior currently implemented. Therefore, a failing test is treated as evidence of a defect rather than a test-suite problem.

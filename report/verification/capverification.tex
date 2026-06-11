@@ -1,0 +1,24 @@
+\chapter{Verification} \label{cap:verification}
+
+The command used for verification was:
+
+\texttt{mvn test}
+
+
+The suite currently fails intentionally because several tests expose known implementation bugs. The latest full run executed 47 tests: 38 passed, 7 failed by assertion, and 2 errored at implementation bug points. The expected failing tests are:
+
+\begin{itemize}
+\item \texttt{ProviderIntegrationTest.ticketmasterProviderEncodesQueryParameters}
+\item \texttt{DiscoveryServiceTest.searchContinuesWhenOneConfiguredProviderThrows}
+\item \texttt{ICalServiceTest.renderFoldsLongContentLinesAtSeventyFiveCharacters}
+\item \texttt{UserServiceTest.registerRejectsBlankRequiredFieldsServerSide}
+\item \texttt{MeetingServiceTest.proposeRejectsOrganizerOverlapBeforeSaving}
+\item \texttt{MeetingServiceTest.proposeRejectsInviteeOverlapBeforeSaving}
+\item \texttt{MeetingServiceTest.copyFromDiscoveredRejectsUserOverlap}
+\item \texttt{RestApiIntegrationTest.respondAcceptsOnlyKnownActions}
+\item \texttt{RestApiIntegrationTest.userCannotRespondToSomeoneElsesInvite}
+\end{itemize}
+
+All other tests passed. In particular, the repository integration tests, the non-bug-revealing provider tests, the non-bug-revealing REST tests, the passing service tests, and the Selenium end-to-end workflow completed successfully.
+
+The Selenium end-to-end test is included in the full run and passed. The local verification command was run outside the restrictive shell sandbox because the Selenium test starts an embedded Spring Boot web server on a random local port and launches ChromeDriver.

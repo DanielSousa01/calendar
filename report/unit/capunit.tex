@@ -1,0 +1,46 @@
+\chapter{Unit Tests} \label{cap:unit}
+
+Unit tests are located in \texttt{src/test/java/com/example/meetings/service}.
+
+\section{MeetingService}
+
+The \texttt{MeetingServiceTest} class verifies meeting business rules using mocked repositories. This is the correct level for rules such as invitee normalization, overlap validation, default event duration, response validation, and iCal-token lookup because those rules should be tested independently from the database implementation.
+
+\begin{itemize}
+\item Meeting proposal accepts only valid time windows.
+\item Organizer overlap is rejected before saving.
+\item Invitee overlap is rejected before saving.
+\item Unknown invitees are rejected.
+\item Organizer is automatically accepted.
+\item Duplicate, blank, \texttt{null}, and self-invite entries are ignored.
+\item Invite responses accept only \texttt{ACCEPTED} or \texttt{DECLINED}.
+\item Missing invites are rejected.
+\item Discovered events are copied as accepted single-participant meetings.
+\item Discovered events without an end time default to two hours.
+\item iCal token lookup delegates to the calendar query.
+\item Invalid iCal tokens are rejected.
+\end{itemize}
+
+Repositories are mocked so each test can state exactly which repository calls are expected and whether saving should happen. This makes missing overlap checks visible: the current implementation saves meetings without querying for organizer or invitee overlaps, and saves copied discovered events without checking the user's calendar.
+
+\section{ICalService}
+
+The \texttt{ICalServiceTest} class verifies iCalendar rendering rules. This is a pure rendering service, so tests do not need Spring or a database.
+
+\begin{itemize}
+\item Text fields are escaped according to iCalendar requirements.
+\item Calendar output uses CRLF line endings.
+\item Dates are rendered in UTC.
+\item Pending meetings are rendered as tentative.
+\item Fully accepted meetings are rendered as confirmed.
+\item Declined participants are rendered with \texttt{PARTSTAT=DECLINED}.
+\item Long content lines should be folded according to RFC 5545.
+\end{itemize}
+
+The long-line folding test currently fails, revealing that \texttt{ICalService} appends long fields directly instead of folding them.
+
+\section{UserService}
+
+The \texttt{UserServiceTest} class verifies registration behavior with a mocked \texttt{UserRepository} and \texttt{PasswordEncoder}. It checks that registration should reject blank username, email, and password values before persisting a user.
+
+This test currently fails because \texttt{UserService.register(...)} only checks duplicate usernames and then saves the user with the encoded password. Browser-side \texttt{required} attributes are not sufficient validation because direct HTTP clients can bypass them.

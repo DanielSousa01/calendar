@@ -1,0 +1,42 @@
+\documentclass[11pt,a4paper]{report}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{url}
+
+\title{VVS Assignment 2\\Calendar Test Suite Report}
+\author{}
+\date{June 2026}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\IfFileExists{images/fcul.png}{\includegraphics[width=0.25\textwidth]{images/fcul.png}\par\vspace{1.5cm}}{}
+{\Large VVS 2025/2026\par}
+\vspace{1cm}
+{\huge\bfseries Assignment 2\par}
+\vspace{0.4cm}
+{\LARGE Calendar Test Suite Report\par}
+\vfill
+{\large June 2026\par}
+\end{titlepage}
+
+\tableofcontents
+
+\input{introduction/capintroduction}
+\input{sut/capsut}
+\input{strategy/capstrategy}
+\input{unit/capunit}
+\input{thirdparty/capthirdparty}
+\input{restapi/caprestapi}
+\input{repository/caprepository}
+\input{endtoend/capendtoend}
+\input{bugs/capbugs}
+\input{verification/capverification}
+\input{conclusion/capconclusion}
+
+\end{document}

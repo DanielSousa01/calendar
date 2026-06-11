@@ -1,0 +1,19 @@
+\chapter{Repository Integration Tests} \label{cap:repository}
+
+Repository integration tests are located in \texttt{src/test/java/com/example/meetings/repository/MeetingRepositoryIntegrationTest.java}.
+
+These tests verify the actual Spring Data JPA queries against H2. This is separate from the service unit tests because mocked repositories cannot prove that the query annotations and entity mappings behave correctly.
+
+\begin{itemize}
+\item Calendar query includes organizer meetings.
+\item Calendar query includes pending invites.
+\item Calendar query filters declined invites for invitees.
+\item Pending invite lookup returns the expected participant.
+\item Overlap query finds intersecting meetings.
+\item Overlap query allows meetings that touch at boundaries.
+\item Overlap query ignores declined participant copies.
+\item Overlap query still blocks the organizer's copy.
+\item Calendar query orders meetings by start time.
+\end{itemize}
+
+H2 is not the production database, but it is a concrete relational database and is sufficient here to exercise JPA mapping, constraints, query predicates, ordering, and persistence behavior. This level is important because query regressions would not be caught by mocked service tests.

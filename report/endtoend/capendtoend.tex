@@ -1,0 +1,19 @@
+\chapter{End-to-End Test} \label{cap:endtoend}
+
+The Selenium end-to-end test is located in \texttt{src/test/java/com/example/meetings/e2e/SeleniumEndToEndTest.java}.
+
+It starts the application on a random port with a testing H2 database and verifies the main user workflow through a real browser:
+
+\begin{enumerate}
+\item Register a user.
+\item Log in.
+\item Open the meeting proposal page.
+\item Create a meeting.
+\item Return to the calendar and verify the created meeting is visible.
+\end{enumerate}
+
+The browser runs headless Chrome. The random port prevents conflicts with a developer's local server, and the isolated H2 database ensures the test does not depend on or modify previous application data.
+
+This test complements the REST tests. \texttt{MockMvc} is better for precise status-code and security assertions, while Selenium verifies that the rendered pages, forms, CSRF tokens, redirects, authentication flow, and browser interaction work together from a user's perspective.
+
+The Selenium test passed in the latest full verification run.

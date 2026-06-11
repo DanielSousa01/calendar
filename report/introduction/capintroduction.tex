@@ -1,0 +1,14 @@
+\chapter{Introduction} \label{cap:introduction}
+
+This report describes the testing work performed for the Calendar Spring Boot application supplied for VVS Assignment 2. The assignment goal is to assess the ability to test a larger Spring Boot MVC application at several levels: business logic, third-party integrations, REST/API behavior, persistence, and browser-level workflows.
+
+The application is a meeting scheduler. Users can register and log in, create meetings, invite other users, accept or decline invitations, expose an iCalendar feed, and copy discovered events from external providers into their own calendar.
+
+The test suite was designed with two goals:
+
+\begin{itemize}
+\item Cover each testing category requested in the assignment using the most appropriate isolation level.
+\item Expose implementation bugs through executable tests, while keeping the rest of the suite deterministic and repeatable.
+\end{itemize}
+
+The final Maven run executes 47 tests. Most tests pass and validate the expected behavior of the application. Nine tests intentionally fail because they reveal current implementation defects documented in Chapter~\ref{cap:bugs}.

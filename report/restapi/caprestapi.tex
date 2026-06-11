@@ -1,0 +1,29 @@
+\chapter{REST API Integration Tests} \label{cap:restapi}
+
+REST API integration tests are located in \texttt{src/test/java/com/example/meetings/controller/RestApiIntegrationTest.java}.
+
+These tests run the full Spring context and exercise HTTP behavior through \texttt{MockMvc}. This level was chosen for web concerns that unit tests cannot fully represent: Spring Security, CSRF, request routing, controller-to-service wiring, redirects, status codes, and rendered response content.
+
+\begin{itemize}
+\item Unauthenticated calendar access redirects to login.
+\item Registration creates a user and redirects to login.
+\item Registration requires CSRF.
+\item Authenticated calendar rendering shows calendar contents and iCal link.
+\item iCal feed is public and renders calendar content.
+\item Invalid iCal tokens return 404.
+\item Invalid invite response actions return 400.
+\item Users cannot respond to someone else's invite.
+\item Invalid meeting time windows re-render the form with an error.
+\item Meeting proposal requires CSRF.
+\item Copying a discovered event creates an accepted calendar entry.
+\item Copying a discovered event requires CSRF.
+\end{itemize}
+
+The tests use an in-memory H2 database configured specifically for the REST test context. This keeps the tests close to real application behavior while avoiding the production database.
+
+Two REST tests are intentionally bug-revealing:
+
+\begin{itemize}
+\item \texttt{respondAcceptsOnlyKnownActions} expects unknown actions such as \texttt{maybe} to return \texttt{400 Bad Request}. The current controller maps every non-\texttt{accept} value to \texttt{DECLINED}.
+\item \texttt{userCannotRespondToSomeoneElsesInvite} expects a clean \texttt{404 Not Found} response when the authenticated user has no invite for that meeting. The current exception is not translated into an HTTP response.
+\end{itemize}

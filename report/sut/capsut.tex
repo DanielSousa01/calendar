@@ -1,0 +1,15 @@
+\chapter{SUT Modifications} \label{cap:sut}
+
+The assignment allows adapting the system under test when necessary, provided the final report lists and justifies those changes. For this submission, the production implementation under \texttt{src/main/java} was not changed to make the bug-detecting tests pass. The observed implementation defects are intentionally left visible through failing tests.
+
+The following non-production changes and test harness choices were necessary to keep the tests deterministic and isolated:
+
+\begin{itemize}
+\item Test dependencies in \texttt{pom.xml}: \texttt{spring-boot-starter-test}, \texttt{spring-security-test}, Selenium, and H2 are used to support unit, integration, and end-to-end testing.
+\item Provider tests replace each provider's private \texttt{RestClient} with \texttt{ReflectionTestUtils}. This keeps production constructors unchanged while allowing deterministic HTTP integration tests with \texttt{MockRestServiceServer}.
+\item REST tests configure an isolated H2 database instead of using the file-backed local database.
+\item Selenium tests configure a separate H2 database and random application port.
+\item \texttt{src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker} selects Mockito's subclass mock maker. This avoids Java 25 inline-agent problems in the local verification environment while preserving ordinary Mockito behavior for the tests used here.
+\end{itemize}
+
+These changes affect the test harness and build configuration, not the production behavior being evaluated.
