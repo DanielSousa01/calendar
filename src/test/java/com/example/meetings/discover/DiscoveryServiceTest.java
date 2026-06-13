@@ -1,6 +1,7 @@
 package com.example.meetings.discover;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 
 import java.time.Instant;
 import java.util.List;
@@ -75,6 +76,7 @@ class DiscoveryServiceTest {
     }
 
     @Test
+    @Tag("bug")
     void searchContinuesWhenOneConfiguredProviderThrows() {
         DiscoveredEvent event = event("Healthy", "1", "https://events.test/1", "2026-06-01T09:00:00Z");
         DiscoveryService service = new DiscoveryService(List.of(

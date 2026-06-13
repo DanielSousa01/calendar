@@ -8,6 +8,7 @@ import com.example.meetings.repository.MeetingParticipantRepository;
 import com.example.meetings.repository.MeetingRepository;
 import com.example.meetings.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -126,6 +127,7 @@ class RestApiIntegrationTest {
 
     @Test
     @WithMockUser(username = "bob")
+    @Tag("bug")
     void respondAcceptsOnlyKnownActions() throws Exception {
         User alice = userRepository.save(new User("alice", "alice@example.com", "hash"));
         User bob = userRepository.save(new User("bob", "bob@example.com", "hash"));
@@ -142,6 +144,7 @@ class RestApiIntegrationTest {
 
     @Test
     @WithMockUser(username = "charlie")
+    @Tag("bug")
     void userCannotRespondToSomeoneElsesInvite() throws Exception {
         User alice = userRepository.save(new User("alice", "alice@example.com", "hash"));
         User bob = userRepository.save(new User("bob", "bob@example.com", "hash"));

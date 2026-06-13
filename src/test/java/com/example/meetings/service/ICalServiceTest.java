@@ -4,6 +4,7 @@ import com.example.meetings.model.InviteStatus;
 import com.example.meetings.model.Meeting;
 import com.example.meetings.model.MeetingParticipant;
 import com.example.meetings.model.User;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -73,6 +74,7 @@ class ICalServiceTest {
     }
 
     @Test
+    @Tag("bug")
     void renderFoldsLongContentLinesAtSeventyFiveCharacters() {
         User alice = new User("alice", "alice@example.com", "hash");
         Meeting meeting = meeting(

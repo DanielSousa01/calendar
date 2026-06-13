@@ -8,6 +8,7 @@ import com.example.meetings.model.User;
 import com.example.meetings.repository.MeetingParticipantRepository;
 import com.example.meetings.repository.MeetingRepository;
 import com.example.meetings.repository.UserRepository;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
@@ -57,6 +58,7 @@ class MeetingServiceTest {
     }
 
     @Test
+    @Tag("bug")
     void proposeRejectsOrganizerOverlapBeforeSaving() {
         User organizer = new User("alice", "alice@example.com", "hash");
         Instant start = Instant.parse("2026-06-01T10:00:00Z");
@@ -72,6 +74,7 @@ class MeetingServiceTest {
     }
 
     @Test
+    @Tag("bug")
     void proposeRejectsInviteeOverlapBeforeSaving() {
         User organizer = new User("alice", "alice@example.com", "hash");
         User bob = new User("bob", "bob@example.com", "hash");
@@ -183,6 +186,7 @@ class MeetingServiceTest {
     }
 
     @Test
+    @Tag("bug")
     void copyFromDiscoveredRejectsUserOverlap() {
         User user = new User("alice", "alice@example.com", "hash");
         DiscoveredEvent event = new DiscoveredEvent(

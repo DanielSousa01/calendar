@@ -2,6 +2,7 @@ package com.example.meetings.service;
 
 import com.example.meetings.model.User;
 import com.example.meetings.repository.UserRepository;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -19,6 +20,7 @@ class UserServiceTest {
     private final UserService service = new UserService(userRepository, passwordEncoder);
 
     @Test
+    @Tag("bug")
     void registerRejectsBlankRequiredFieldsServerSide() {
         when(userRepository.existsByUsername("")).thenReturn(false);
         when(passwordEncoder.encode("")).thenReturn("hash");

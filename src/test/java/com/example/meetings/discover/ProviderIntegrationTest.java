@@ -1,6 +1,7 @@
 package com.example.meetings.discover;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -54,6 +55,7 @@ class ProviderIntegrationTest {
     }
 
     @Test
+    @Tag("bug")
     void ticketmasterProviderEncodesQueryParameters() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://ticketmaster.test");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
