@@ -1,31 +1,59 @@
-\documentclass[11pt,a4paper]{report}
+\documentclass[a4paper,openright,twoside,11pt]{report}
 
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{float}
 \usepackage{url}
+\usepackage[hidelinks]{hyperref}
 
-\title{VVS Assignment 2\\Calendar Test Suite Report}
-\author{}
-\date{June 2026}
+\setlength{\textheight}{24.00cm}
+\setlength{\textwidth}{15.50cm}
+\setlength{\topmargin}{0.35cm}
+\setlength{\headheight}{0cm}
+\setlength{\headsep}{0cm}
+\setlength{\oddsidemargin}{0.25cm}
+\setlength{\evensidemargin}{0.25cm}
+
+\title{
+   \vspace{-50mm}
+   \begin{minipage}[l]{\textwidth}
+      \hspace{-20mm}\resizebox{75mm}{!}{\includegraphics{images/fcul.png}}\\
+   \end{minipage}\\[20mm]
+   \textbf{VVS 2025/2026}\\
+   Assignment 2 -- Calendar
+}
+
+\author{
+\begin{tabular}{ll}
+             & Daniel Martins Cabrita de Sousa: 66128 \\
+\end{tabular}}
+
+\date{
+\begin{tabular}{ll}
+  {Professor:} &  Alcides Fonseca
+\end{tabular}\\[10mm]
+Assignment report for Software Verification and Validation \\
+MSc in Computer Engineering \\[45mm]
+June 2026}
 
 \begin{document}
+\pagenumbering{roman}
+\thispagestyle{empty}
+\maketitle
 
-\begin{titlepage}
-\centering
-\IfFileExists{images/fcul.png}{\includegraphics[width=0.25\textwidth]{images/fcul.png}\par\vspace{1.5cm}}{}
-{\Large VVS 2025/2026\par}
-\vspace{1cm}
-{\huge\bfseries Assignment 2\par}
-\vspace{0.4cm}
-{\LARGE Calendar Test Suite Report\par}
-\vfill
-{\large June 2026\par}
-\end{titlepage}
+\baselineskip 18pt
+\newpage
+\thispagestyle{empty}
 
+\cleardoublepage
 \tableofcontents
+\cleardoublepage
+
+\setcounter{page}{1}
+\pagenumbering{arabic}
 
 \input{introduction/capintroduction}
 \input{sut/capsut}

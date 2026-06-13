@@ -4,6 +4,17 @@ The command used for verification was:
 
 \texttt{mvn test}
 
+\section{Continuous Integration}
+
+Continuous Integration was configured in the branch using GitHub Actions. The workflow file is located at \texttt{.github/workflows/tests.yml} and defines a job named \texttt{test}. The workflow is triggered on pushes to \texttt{main} and on pull requests targeting \texttt{main}, so the test suite is executed automatically whenever changes are submitted through the normal repository workflow.
+
+The CI job runs on an Ubuntu GitHub-hosted runner. It first checks out the repository with \texttt{actions/checkout}, then installs Temurin JDK 17 with \texttt{actions/setup-java}. After the Java environment is ready, the job executes:
+
+\texttt{mvn clean test}
+
+This command compiles the Spring Boot application and runs the complete automated test suite, including unit tests, integration tests, repository tests, REST/API tests, and the Selenium end-to-end test. The CI result is therefore used as branch-level evidence that the test suite runs in a clean environment outside the developer machine.
+
+At the time of verification, the CI run completed the setup steps successfully and then reported the expected test result: 47 tests were executed, with 38 passing tests and 9 bug-revealing tests failing or erroring. This matches the local verification result and confirms that the branch contains both the automated CI configuration and the expected evidence of the current implementation defects.
 
 The suite currently fails intentionally because several tests expose known implementation bugs. The latest full run executed 47 tests: 38 passed, 7 failed by assertion, and 2 errored at implementation bug points. The expected failing tests are:
 
