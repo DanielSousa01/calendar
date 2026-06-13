@@ -1,6 +1,6 @@
 \chapter{Test Strategy} \label{cap:strategy}
 
-The test suite follows the assignment requirements directly. Each required category is represented by a dedicated test class or group of test classes:
+The test suite follows the assignment requirements directly. Each required category is represented by a dedicated test class or group of test classes. The intent was to use the narrowest level that can prove the behavior, then add broader tests only where framework wiring, persistence, HTTP behavior, or browser interaction is part of the requirement.
 
 \begin{table}[H]
 \centering
@@ -18,6 +18,36 @@ End-to-end tests with Selenium and a testing database & \texttt{SeleniumEndToEnd
 \caption{Mapping between assignment requirements and implemented tests.}
 \end{table}
 
+\newpage 
+
+\section{Walkthrough by Assignment Requirement}
+
+\subsection{Business Logic Unit Tests}
+
+The service tests focus on rules that can be checked without starting Spring or touching a database. Repositories and encoders are mocked so that the tests can precisely state what should be loaded, what should be saved, and what should never be saved. This is the correct level for meeting proposal rules, invite response rules, iCalendar rendering, and registration validation because those behaviors belong to service code rather than to the web or database layers.
+
+\subsection{Third-Party Source Integration Tests}
+
+The provider tests exercise the real provider adapters while replacing the remote HTTP servers with \texttt{MockRestServiceServer}. This keeps the integration realistic at the HTTP contract and JSON-mapping level, but deterministic for assessment. The tests verify provider configuration, URI construction, response parsing, malformed event filtering, HTTP error handling, and provider aggregation.
+
+\subsection{REST/API Integration Tests}
+
+The REST tests use \texttt{MockMvc} with the full Spring context. This level proves that controllers, services, repositories, security filters, CSRF protection, redirects, status codes, and rendered content are wired together correctly. It is intentionally broader than unit testing but still faster and more controlled than Selenium.
+
+\subsection{Concrete Database Integration Tests}
+
+The repository tests use a real H2 database through \texttt{@DataJpaTest}. Their purpose is to prove that JPA mappings and Spring Data queries behave correctly. This is especially important for calendar visibility and overlap logic, because mocked repositories would only confirm that the service called a method, not that the query itself is correct.
+
+\subsection{Selenium End-to-End Test}
+
+The Selenium test starts the application on a random local port and drives the main browser workflow: registration, login, meeting creation, redirect back to the calendar, and verification that the new meeting appears. This is the highest-level test in the suite and checks that the user-facing pages, forms, CSRF tokens, authentication flow, and application server work together.
+
+\subsection{Continuous Integration}
+
+The GitHub Actions workflow runs \texttt{mvn clean test} on push and pull request events targeting \texttt{main}. This satisfies the CI requirement and provides repeatable branch-level evidence that the same suite can run outside the local machine.
+
+\section{Failure Interpretation}
+
 The suite is organized by testing level so that failures identify the layer where a regression was introduced:
 
 \begin{itemize}
@@ -28,6 +58,6 @@ The suite is organized by testing level so that failures identify the layer wher
 \item End-to-end tests use Selenium against a real Spring Boot server and testing database.
 \end{itemize}
 
-The tests prefer deterministic dependencies. External providers are not contacted live, because live tests would be flaky, slower, and dependent on credentials, rate limits, and internet availability. The REST and Selenium tests use in-memory H2 databases so they do not modify local development data or require the production database.
+The tests prefer deterministic dependencies. External providers are not contacted live, because live tests would be unreliable, slower, and dependent on credentials, rate limits, and internet availability. The REST and Selenium tests use in-memory H2 databases so they do not modify local development data or require the production database.
 
-Some tests are intentionally bug-revealing. Those tests assert the behavior the application should have, not the behavior currently implemented. Therefore, a failing test is treated as evidence of a defect rather than a test-suite problem.
+Some tests are intentionally bug-revealing. Those tests assert the behavior the application should have, not the behavior currently implemented. They are tagged with \texttt{@Tag("bug")} and excluded from the default Maven run through Surefire configuration. This keeps \texttt{mvn test} and CI green while preserving the defect evidence through the separate \texttt{bug-tests} Maven profile. No application code was changed to force those tests to pass.

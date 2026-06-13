@@ -1,29 +1,40 @@
 \chapter{Third-Party Provider Integration Tests} \label{cap:thirdparty}
 
-Provider integration tests are located in \texttt{src/test/java/com/example/meetings/discover/ProviderIntegrationTest.java}.
+Provider integration tests are implemented in \texttt{ProviderIntegrationTest}, under the discovery test package.
 
-These tests use \texttt{MockRestServiceServer} to verify the integration contract without depending on live Ticketmaster, SeatGeek, or AgendaLx services. This choice avoids network flakiness, API credentials, rate limits, and changing third-party data. The providers still execute their real mapping and error-handling code; only the remote HTTP endpoint is simulated.
+These tests use \texttt{MockRestServiceServer} to verify the integration contract without depending on live Ticketmaster, SeatGeek, or AgendaLx services. This choice avoids network flakiness, API credentials, rate limits, and changing third-party data. The providers still execute their real mapping and error handling code, only the remote HTTP endpoint is simulated.
 
-Covered behavior includes:
+\section{Provider Test Walkthrough}
 
-\begin{itemize}
-\item Ticketmaster response mapping.
-\item Ticketmaster unconfigured state.
-\item Ticketmaster malformed event filtering.
-\item Ticketmaster HTTP error handling.
-\item Ticketmaster query parameter encoding.
-\item SeatGeek response mapping.
-\item SeatGeek fallback from \texttt{title} to \texttt{short\_title}.
-\item SeatGeek malformed event filtering.
-\item SeatGeek HTTP error handling.
-\item AgendaLx response mapping.
-\item AgendaLx user-agent usage.
-\item AgendaLx past occurrence filtering.
-\item AgendaLx blank title filtering.
-\item AgendaLx fallback to 20:00 Europe/Lisbon when no time is parseable.
-\item AgendaLx HTTP error handling.
-\end{itemize}
+Each provider test follows the same structure:
 
-The Ticketmaster query-encoding test intentionally fails. It asserts that query parameters such as spaces should be encoded exactly once, but the current provider produces \texttt{\%2520}, showing that an already-encoded value is encoded a second time.
+\begin{enumerate}
+\item Build a \texttt{RestClient} with a fake provider base URL.
+\item Bind \texttt{MockRestServiceServer} to that client.
+\item Inject the client into the provider with \texttt{ReflectionTestUtils}, keeping the production constructors unchanged.
+\item Configure the expected HTTP request and the JSON or error response.
+\item Call \texttt{provider.search(query)}.
+\item Assert the resulting \texttt{DiscoveredEvent} values and verify that the expected request was made.
+\end{enumerate}
 
-The discovery-level provider aggregation behavior is tested separately in \texttt{DiscoveryServiceTest}. That test verifies that an outage in one configured provider should not prevent results from other providers. It currently errors because \texttt{DiscoveryService} does not catch provider exceptions.
+\newpage 
+
+\section{Ticketmaster}
+
+Ticketmaster tests cover a configured provider, an unconfigured provider, malformed events, HTTP failures, and query parameter encoding. The mapping test verifies that the provider reads the event id, title, URL, description, start instant, and venue from the Discovery API shape. The unconfigured case checks that a blank API key disables the provider without making a request.
+
+\section{SeatGeek}
+
+SeatGeek tests verify mapping from the events response, fallback from \texttt{title} to \texttt{short\_title}, filtering malformed dates, and returning an empty result on HTTP errors. This provider uses \texttt{datetime\_utc}, so the tests make sure the parsed event time is usable by the application's shared \texttt{DiscoveredEvent} model.
+
+\section{Agenda Cultural de Lisboa}
+
+AgendaLx tests verify the public endpoint mapping, the configured user agent, filtering of past occurrences, filtering of blank titles, fallback to 20:00 Europe/Lisbon when no time can be parsed, and HTTP error handling. These cases are important because this provider has a different JSON shape and does not require credentials, making it the default discovery source when the other providers are not configured.
+
+The Ticketmaster query encoding test is tagged as bug revealing. It asserts that query parameters such as spaces should be encoded exactly once, but the current provider produces \texttt{\%2520}, showing that an already-encoded value is encoded a second time.
+
+\section{DiscoveryService Aggregation}
+
+The discovery level provider aggregation behavior is tested separately in \texttt{DiscoveryServiceTest}. This class does not test HTTP, instead, it uses small in memory \texttt{EventProvider} implementations to focus on aggregation rules. It verifies that blank queries return no results, unconfigured providers are skipped, duplicate URLs are removed, and results are sorted by start time.
+
+The bug revealing aggregation test verifies that an outage in one configured provider should not prevent results from other providers. When run with \texttt{mvn -Pbug-tests test}, it errors because \texttt{DiscoveryService} does not catch provider exceptions.

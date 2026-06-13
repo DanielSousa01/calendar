@@ -6,11 +6,14 @@ The application is a meeting scheduler. Users can register and log in, create me
 
 The project repository is available at \url{https://github.com/DanielSousa01/calendar}.
 
-The test suite was designed with two goals:
+This document is written as a walkthrough of the solution. Chapter~\ref{cap:sut} first explains the system under test and the modification policy. Chapter~\ref{cap:strategy} maps each assignment requirement to the implemented evidence. The following chapters then walk through each testing level, explaining what part of the code is exercised, why that testing level was chosen, what data or mocks are used, and which defects are intentionally exposed.
+
+The test suite was designed with three goals:
 
 \begin{itemize}
 \item Cover each testing category requested in the assignment using the most appropriate isolation level.
-\item Expose implementation bugs through executable tests, while keeping the rest of the suite deterministic and repeatable.
+\item Keep the application implementation unchanged, so the tests evaluate the code as it exists in the submitted project.
+\item Expose implementation bugs through executable tests, while keeping the default CI suite deterministic and passing.
 \end{itemize}
 
-The final Maven run executes 47 tests. Most tests pass and validate the expected behavior of the application. Nine tests intentionally fail because they reveal current implementation defects documented in Chapter~\ref{cap:bugs}.
+The default Maven run executes 38 non-bug-revealing tests and passes. The remaining nine bug-revealing tests are tagged with \texttt{@Tag("bug")} and can be run deliberately with \texttt{mvn -Pbug-tests test}, they fail because they reveal current implementation defects documented in Chapter~\ref{cap:bugs}.

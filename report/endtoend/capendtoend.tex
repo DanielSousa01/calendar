@@ -1,6 +1,6 @@
 \chapter{End-to-End Test} \label{cap:endtoend}
 
-The Selenium end-to-end test is located in \texttt{src/test/java/com/example/meetings/e2e/SeleniumEndToEndTest.java}.
+The Selenium end-to-end test is implemented in \texttt{SeleniumEndToEndTest}, under the end-to-end test package.
 
 It starts the application on a random port with a testing H2 database and verifies the main user workflow through a real browser:
 
@@ -14,6 +14,12 @@ It starts the application on a random port with a testing H2 database and verifi
 
 The browser runs headless Chrome. The random port prevents conflicts with a developer's local server, and the isolated H2 database ensures the test does not depend on or modify previous application data.
 
-This test complements the REST tests. \texttt{MockMvc} is better for precise status-code and security assertions, while Selenium verifies that the rendered pages, forms, CSRF tokens, redirects, authentication flow, and browser interaction work together from a user's perspective.
+\section{Browser Walkthrough}
+
+The test uses the real application pages rather than calling controllers directly. It opens \texttt{/register}, fills the username, email, and password fields, submits the form, waits for the \texttt{/login?registered} redirect, logs in, waits for \texttt{/calendar}, and checks that the page indicates the user is signed in.
+
+It then opens \texttt{/meetings/new}, fills the meeting form, submits it through the browser's form API, waits for the redirect back to \texttt{/calendar}, and checks that the created meeting title and confirmed status appear in the rendered page. JavaScript is used only to set date time input values reliably in headless Chrome, the final submission still goes through the page's form validation and normal application endpoint.
+
+This test complements the REST tests. \texttt{MockMvc} is better for precise status code and security assertions, while Selenium verifies that the rendered pages, forms, CSRF tokens, redirects, authentication flow, and browser interaction work together from a user's perspective.
 
 The Selenium test passed in the latest full verification run.

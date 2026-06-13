@@ -1,29 +1,28 @@
 \chapter{REST API Integration Tests} \label{cap:restapi}
 
-REST API integration tests are located in \texttt{src/test/java/com/example/meetings/controller/RestApiIntegrationTest.java}.
+REST API integration tests are implemented under the controller test package. The test class is \texttt{RestApiIntegrationTest}.
 
 These tests run the full Spring context and exercise HTTP behavior through \texttt{MockMvc}. This level was chosen for web concerns that unit tests cannot fully represent: Spring Security, CSRF, request routing, controller-to-service wiring, redirects, status codes, and rendered response content.
 
-\begin{itemize}
-\item Unauthenticated calendar access redirects to login.
-\item Registration creates a user and redirects to login.
-\item Registration requires CSRF.
-\item Authenticated calendar rendering shows calendar contents and iCal link.
-\item iCal feed is public and renders calendar content.
-\item Invalid iCal tokens return 404.
-\item Invalid invite response actions return 400.
-\item Users cannot respond to someone else's invite.
-\item Invalid meeting time windows re-render the form with an error.
-\item Meeting proposal requires CSRF.
-\item Copying a discovered event creates an accepted calendar entry.
-\item Copying a discovered event requires CSRF.
-\end{itemize}
+\section{Test Context}
 
-The tests use an in-memory H2 database configured specifically for the REST test context. This keeps the tests close to real application behavior while avoiding the production database.
+The test class is annotated with \texttt{@SpringBootTest} and \texttt{@AutoConfigureMockMvc}. It uses a test only H2 database configured with \texttt{@TestPropertySource}. Before each test, repositories are cleared so every scenario starts from a known state. Authentication is simulated with \texttt{@WithMockUser} when a logged-in user is required, and CSRF tokens are added with \texttt{csrf()} when the request should represent a valid form submission.
 
-Two REST tests are intentionally bug-revealing:
+\section{HTTP Walkthrough}
 
-\begin{itemize}
-\item \texttt{respondAcceptsOnlyKnownActions} expects unknown actions such as \texttt{maybe} to return \texttt{400 Bad Request}. The current controller maps every non-\texttt{accept} value to \texttt{DECLINED}.
-\item \texttt{userCannotRespondToSomeoneElsesInvite} expects a clean \texttt{404 Not Found} response when the authenticated user has no invite for that meeting. The current exception is not translated into an HTTP response.
-\end{itemize}
+The tested HTTP flows are:
+
+\begin{enumerate}
+\item Unauthenticated access to \texttt{/calendar} redirects to the login page.
+\item \texttt{POST /register} with CSRF creates a user and redirects to \texttt{/login?registered}.
+\item \texttt{POST /register} without CSRF is forbidden and does not persist a user.
+\item Authenticated \texttt{GET /calendar} renders meeting content and the user's iCal URL.
+\item Public \texttt{GET /ical/\{token\}.ics} returns a \texttt{text/calendar} feed for a valid token and 404 for an invalid token.
+\item \texttt{POST /meetings/\{id\}/respond} should reject unknown actions and should not let a user respond to someone else's invite.
+\item \texttt{POST /meetings/new} re-renders the form with an error for an invalid time window and requires CSRF for mutation.
+\item \texttt{POST /discover/copy} creates an accepted calendar entry for the authenticated user and also requires CSRF.
+\end{enumerate}
+
+Together, these tests cover authentication boundaries, registration, CSRF protection, calendar rendering, iCal feed access, invite responses, meeting proposal validation, and copying discovered events. The tests use an in memory H2 database configured specifically for the REST test context. This keeps the tests close to real application behavior while avoiding the production database.
+
+Two REST tests are intentionally bug revealing. \texttt{respondAcceptsOnlyKnownActions} expects unknown actions such as \texttt{maybe} to return \texttt{400 Bad Request}, the current controller maps every non-\texttt{accept} value to \texttt{DECLINED}. \texttt{userCannotRespondToSomeoneElsesInvite} expects a clean \texttt{404 Not Found} response when the authenticated user has no invite for that meeting, the current exception is not translated into an HTTP response.

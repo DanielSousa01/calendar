@@ -1,19 +1,20 @@
 \chapter{Repository Integration Tests} \label{cap:repository}
 
-Repository integration tests are located in \texttt{src/test/java/com/example/meetings/repository/MeetingRepositoryIntegrationTest.java}.
+Repository integration tests are implemented in \texttt{MeetingRepositoryIntegrationTest}, under the repository test package.
 
 These tests verify the actual Spring Data JPA queries against H2. This is separate from the service unit tests because mocked repositories cannot prove that the query annotations and entity mappings behave correctly.
 
-\begin{itemize}
-\item Calendar query includes organizer meetings.
-\item Calendar query includes pending invites.
-\item Calendar query filters declined invites for invitees.
-\item Pending invite lookup returns the expected participant.
-\item Overlap query finds intersecting meetings.
-\item Overlap query allows meetings that touch at boundaries.
-\item Overlap query ignores declined participant copies.
-\item Overlap query still blocks the organizer's copy.
-\item Calendar query orders meetings by start time.
-\end{itemize}
+\section{Database Walkthrough}
 
-H2 is not the production database, but it is a concrete relational database and is sufficient here to exercise JPA mapping, constraints, query predicates, ordering, and persistence behavior. This level is important because query regressions would not be caught by mocked service tests.
+The repository tests run with \texttt{@DataJpaTest}. Spring creates a repository-focused context with a concrete H2 database, entity mappings, transactions, and the real query methods. Each test persists users, meetings, and participants, then calls repository methods and checks the returned meetings or participants.
+
+The four test methods cover multiple query cases:
+
+\begin{enumerate}
+\item \texttt{calendarQueryUsesConcreteH2DatabaseAndFiltersDeclinedInvites} persists organizer meetings and pending or declined participant rows, then verifies calendar visibility and pending invite lookup.
+\item \texttt{overlapQueryFindsIntersectingSlotsButAllowsTouchingBoundaries} verifies that intersecting intervals are found while adjacent meetings ending or starting exactly at the boundary are allowed.
+\item \texttt{overlapQueryIgnoresDeclinedParticipantButKeepsOrganizerCopy} verifies that declined invitees are not blocked by a meeting they declined, while the organizer's own copy still blocks the slot.
+\item \texttt{calendarQueryOrdersMeetingsByStartTime} verifies stable chronological ordering.
+\end{enumerate}
+
+Together, these tests cover organizer meetings, pending invites, declined invite filtering, pending invite lookup, overlap detection, boundary touching meetings, declined participant copies, organizer blocking, and chronological ordering. H2 is not the production database, but it is a concrete relational database and is sufficient here to exercise JPA mapping, constraints, query predicates, ordering, and persistence behavior. This level is important because query regressions would not be caught by mocked service tests.

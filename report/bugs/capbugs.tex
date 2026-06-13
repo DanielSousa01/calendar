@@ -1,6 +1,6 @@
 \chapter{Bugs Detected} \label{cap:bugs}
 
-This chapter documents the implementation defects exposed by the automated tests. These tests intentionally assert the desired behavior of the application. They are expected to fail until the production implementation is corrected.
+This chapter documents the implementation defects exposed by the bug-tagged automated tests. These tests intentionally assert the desired behavior of the application. They are excluded from the default \texttt{mvn test} run and can be executed with \texttt{mvn -Pbug-tests test}. They are expected to fail until the production implementation is corrected.
 
 \section{Ticketmaster query parameters are double-encoded}
 
@@ -18,17 +18,20 @@ Actual request:
 https://ticketmaster.test/events.json?keyword=lisbon%2520jazz&size=20&apikey=secret%2520key&countryCode=PT
 }
 
-The \texttt{\%2520} sequence means the already-encoded \texttt{\%20} was encoded again. As a result, searches or API keys containing spaces or other escapable characters can be sent incorrectly to Ticketmaster. This may produce incorrect search results or failed requests.
+The \texttt{\%2520} sequence means the already encoded \texttt{\%20} was encoded again. As a result, searches or API keys containing spaces or other escapable characters can be sent incorrectly to Ticketmaster. This may produce incorrect search results or failed requests.
 
 The likely cause is building a relative path with \texttt{UriComponentsBuilder.toUriString()} and then passing that string to \texttt{RestClient.uri(...)}, which encodes it again. A production fix should build the URI string without pre-encoding query values, or otherwise pass values to \texttt{RestClient} in a way that performs encoding exactly once.
+
+\newpage 
 
 \section{Discovery aggregation aborts when one provider throws}
 
 The test \texttt{searchContinuesWhenOneConfiguredProviderThrows} exposes a robustness bug in \texttt{DiscoveryService}.
 
-Expected behavior: if one configured provider fails, the discovery page should still return results from the other configured providers.
+\textbf{Expected behavior:} if one configured provider fails, the discovery page should still return results from the other configured providers.
 
-Actual behavior: a \texttt{RuntimeException} thrown by one provider escapes from \texttt{DiscoveryService.search(...)}, so later providers are never queried.
+\textbf{Actual behavior:} a \texttt{RuntimeException} thrown by one provider escapes from \texttt{DiscoveryService
+.search(...)}, so later providers are never queried.
 
 \textbf{Impact:} a temporary outage or parsing bug in one external source can break the whole discovery feature, even when other providers are healthy.
 
@@ -36,29 +39,31 @@ Actual behavior: a \texttt{RuntimeException} thrown by one provider escapes from
 
 The test \texttt{renderFoldsLongContentLinesAtSeventyFiveCharacters} exposes an RFC 5545 compatibility bug in \texttt{ICalService}.
 
-Expected behavior: long iCalendar content lines should be folded so each physical line is at most 75 characters/octets, with continuation lines beginning with a space.
+\textbf{Expected behavior:} long iCalendar content lines should be folded so each physical line is at most 75 characters, with continuation lines beginning with a space.
 
-Actual behavior: long fields such as \texttt{SUMMARY} are emitted as a single physical line longer than the iCalendar limit.
+\textbf{Actual behavior:} long fields such as \texttt{SUMMARY} are emitted as a single physical line longer than the iCalendar limit.
 
 \textbf{Impact:} some calendar clients may reject the feed or parse long event fields incorrectly.
 
 \section{Registration accepts blank required fields server-side}
 
-The test \texttt{registerRejectsBlankRequiredFieldsServerSide} exposes an input-validation bug in \texttt{UserService}.
+The test \texttt{registerRejectsBlankRequiredFieldsServerSide} exposes an input validation bug in \texttt{UserService}.
 
-Expected behavior: \texttt{username}, \texttt{email}, and \texttt{password} should be validated on the server, not only through HTML \texttt{required} fields.
+\textbf{Expected behavior:} \texttt{username}, \texttt{email}, and \texttt{password} should be validated on the server, not only through HTML \texttt{required} fields.
 
-Actual behavior: \texttt{UserService.register(...)} only checks duplicate usernames and then saves the user. Blank values can therefore bypass browser validation through direct HTTP requests or API clients.
+\textbf{Actual behavior:} \texttt{UserService.register(...)} only checks duplicate usernames and then saves the user. Blank values can therefore bypass browser validation through direct HTTP requests or API clients.
 
 \textbf{Impact:} invalid user accounts can be persisted, and blank usernames can interfere with authentication and identity assumptions.
+
+\newpage 
 
 \section{Meeting proposal does not reject organizer overlaps}
 
 The test \texttt{proposeRejectsOrganizerOverlapBeforeSaving} exposes a scheduling bug in \texttt{MeetingService}.
 
-Expected behavior: before saving a proposed meeting, the service should query the organizer's calendar and reject overlapping meetings.
+\textbf{Expected behavior:} before saving a proposed meeting, the service should query the organizer's calendar and reject overlapping meetings.
 
-Actual behavior: \texttt{MeetingService.propose(...)} creates the meeting and saves it without calling \texttt{MeetingRepository.findOverlapping(...)} for the organizer.
+\textbf{Actual behavior:} \texttt{MeetingService.propose(...)} creates the meeting and saves it without calling \texttt{MeetingRepository.findOverlapping(...)} for the organizer.
 
 \textbf{Impact:} organizers can create meetings that conflict with their existing calendar events.
 
@@ -66,9 +71,9 @@ Actual behavior: \texttt{MeetingService.propose(...)} creates the meeting and sa
 
 The test \texttt{proposeRejectsInviteeOverlapBeforeSaving} exposes a second scheduling bug in \texttt{MeetingService}.
 
-Expected behavior: each invitee should be checked for overlapping meetings before the proposal is saved.
+\textbf{Expected behavior:} each invitee should be checked for overlapping meetings before the proposal is saved.
 
-Actual behavior: invitees are loaded and added as pending participants, but no overlap query is made for them.
+\textbf{Actual behavior:} invitees are loaded and added as pending participants, but no overlap query is made for them.
 
 \textbf{Impact:} users can receive pending invitations for slots where they are already busy.
 
@@ -76,9 +81,9 @@ Actual behavior: invitees are loaded and added as pending participants, but no o
 
 The test \texttt{copyFromDiscoveredRejectsUserOverlap} exposes another overlap bug in \texttt{MeetingService}.
 
-Expected behavior: importing a discovered event should reject the copy if it overlaps the user's existing meetings.
+\textbf{Expected behavior:} importing a discovered event should reject the copy if it overlaps the user's existing meetings.
 
-Actual behavior: \texttt{copyFromDiscovered(...)} computes the event duration and saves it directly without checking \texttt{findOverlapping(...)}.
+\textbf{Actual behavior:} \texttt{copyFromDiscovered(...)} computes the event duration and saves it directly without checking \texttt{findOverlapping(...)}.
 
 \textbf{Impact:} users can double-book themselves by copying external events into occupied time slots.
 
@@ -86,9 +91,9 @@ Actual behavior: \texttt{copyFromDiscovered(...)} computes the event duration an
 
 The test \texttt{respondAcceptsOnlyKnownActions} exposes a validation bug in \texttt{MeetingController}.
 
-Expected behavior: only explicit \texttt{accept} and \texttt{decline} actions should be accepted; any other value should return \texttt{400 Bad Request}.
+\textbf{Expected behavior:} only explicit \texttt{accept} and \texttt{decline} actions should be accepted, any other value should return \texttt{400 Bad Request}.
 
-Actual behavior: every action other than \texttt{accept} is mapped to \texttt{DECLINED}, so malformed actions such as \texttt{maybe} silently decline the invite and redirect to the calendar.
+\textbf{Actual behavior:} every action other than \texttt{accept} is mapped to \texttt{DECLINED}, so malformed actions such as \texttt{maybe} silently decline the invite and redirect to the calendar.
 
 \textbf{Impact:} invalid or tampered form submissions can mutate invitation state instead of being rejected.
 
@@ -96,8 +101,8 @@ Actual behavior: every action other than \texttt{accept} is mapped to \texttt{DE
 
 The test \texttt{userCannotRespondToSomeoneElsesInvite} exposes HTTP error handling missing from the meeting response flow.
 
-Expected behavior: when an authenticated user responds to a meeting where they have no invite, the endpoint should return \texttt{404 Not Found}.
+\textbf{Expected behavior:} when an authenticated user responds to a meeting where they have no invite, the endpoint should return \texttt{404 Not Found}.
 
-Actual behavior: \texttt{MeetingService.respond(...)} throws \texttt{IllegalArgumentException}, and \texttt{MeetingController} does not translate it to an HTTP response. The exception escapes through Spring MVC.
+\textbf{Actual behavior:} \texttt{MeetingService.respond(...)} throws \texttt{IllegalArgumentException}, and \texttt{MeetingController} does not translate it to an HTTP response. The exception escapes through Spring MVC.
 
 \textbf{Impact:} clients receive a server-side exception instead of a clear not-found response, and the endpoint does not communicate the authorization boundary cleanly.

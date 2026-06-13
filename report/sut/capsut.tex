@@ -1,6 +1,36 @@
-\chapter{SUT Modifications} \label{cap:sut}
+\chapter{Application Walkthrough and SUT Modifications} \label{cap:sut}
 
-The assignment allows adapting the system under test when necessary, provided the final report lists and justifies those changes. For this submission, the production implementation under \texttt{src/main/java} was not changed to make the bug-detecting tests pass. The observed implementation defects are intentionally left visible through failing tests.
+The assignment allows adapting the system under test when necessary, provided the final report lists and justifies those changes. For this submission, the application code was not changed to make the bug-detecting tests pass. The production implementation under \texttt{src/main
+/java}, the Thymeleaf pages under \texttt{src/main/resources/templates}, the stylesheet under \texttt{src/main/resources/static}, and the application configuration are evaluated as they exist in the project. The observed implementation defects are intentionally left visible through bug-tagged tests that are run separately from the default CI suite.
+
+\section{Application Structure}
+
+Calendar is a Spring Boot MVC application organized in the usual layered style:
+
+\begin{itemize}
+\item \texttt{controller}: HTTP entry points for authentication, calendar rendering, meeting actions, iCalendar feeds, and event discovery.
+\item \texttt{service}: business rules for registering users, proposing meetings, responding to invitations, copying discovered events, and rendering iCalendar output.
+\item \texttt{repository}: Spring Data JPA repositories for users, meetings, and meeting participants.
+\item \texttt{model}: JPA entities and the invite status enum.
+\item \texttt{discover}: adapters for Ticketmaster, SeatGeek, and Agenda Cultural de Lisboa plus the aggregation service.
+\item \texttt{templates}: Thymeleaf views used by the browser workflows.
+\end{itemize}
+
+The central domain objects are \texttt{User}, \texttt{Meeting}, and \texttt{MeetingParticipant}. A \texttt{Meeting} has an organizer, a start and end time, a title, a description, and participants. A participant can be \texttt{PENDING}, \texttt{ACCEPTED}, or \texttt{DECLINED}. A meeting is confirmed only when all participants have accepted.
+
+\section{Main Functional Flow}
+
+The main meeting flow starts when an authenticated user submits \texttt{/meetings/new}. \texttt{MeetingController} converts form values into instants and calls \texttt{MeetingService.propose(...)}. The service validates the time window, creates the meeting, auto-accepts the organizer, normalizes invitee usernames, ignores duplicates and self-invites, loads real invitees from \texttt{UserRepository}, creates pending participant records, and saves the meeting through \texttt{MeetingRepository}.
+
+The response flow starts at \texttt{/meetings/\{id\}/respond}. The controller reads the submitted action and passes the corresponding \texttt{InviteStatus} to \texttt{MeetingService.respond(...)}. The service only allows accepted or declined responses, loads the participant row for the authenticated user, and mutates that participant's status.
+
+The calendar flow uses \texttt{MeetingService.calendarFor(...)} and \texttt{pendingInvitesFor(...)}. These delegate to repository queries that include organizer meetings, include pending or accepted invitations, filter declined invitee copies, and order meetings by start time. The iCalendar feed is exposed through \texttt{/ical/\{token\}.ics}, the token is resolved to a user, the user's calendar is loaded, and \texttt{ICalService} renders a VCALENDAR document.
+
+The discovery flow starts at \texttt{/discover}. \texttt{DiscoveryService} queries configured providers, deduplicates events by URL, and sorts the resulting \texttt{DiscoveredEvent} values by start time. Copying a discovered event posts to \texttt{/discover/copy}, where the selected event fields are converted into a confirmed single-participant meeting for the current user.
+
+\section{Modification Policy}
+
+No changes were made to the application implementation to hide or repair the detected defects. This matters for the assessment because the bug-tagged tests describe behavior that should be fixed in production code later, but the current submission keeps those failures as separately executable evidence.
 
 The following non-production changes and test harness choices were necessary to keep the tests deterministic and isolated:
 
@@ -9,7 +39,8 @@ The following non-production changes and test harness choices were necessary to 
 \item Provider tests replace each provider's private \texttt{RestClient} with \texttt{ReflectionTestUtils}. This keeps production constructors unchanged while allowing deterministic HTTP integration tests with \texttt{MockRestServiceServer}.
 \item REST tests configure an isolated H2 database instead of using the file-backed local database.
 \item Selenium tests configure a separate H2 database and random application port.
+\item Bug-revealing tests are tagged with \texttt{@Tag("bug")}. The default Maven and CI runs exclude this tag so the normal regression suite stays green, \texttt{mvn -Pbug-tests test} runs only those defect demonstrations.
 \item \texttt{src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker} selects Mockito's subclass mock maker. This avoids Java 25 inline-agent problems in the local verification environment while preserving ordinary Mockito behavior for the tests used here.
 \end{itemize}
 
-These changes affect the test harness and build configuration, not the production behavior being evaluated.
+These choices affect the test harness, build configuration, CI, and documentation. They do not change the production behavior being evaluated.
