@@ -1,7 +1,6 @@
 package com.example.meetings.discover;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 
 import java.time.Instant;
 import java.util.List;
@@ -25,6 +24,25 @@ class DiscoveryServiceTest {
             @Override
             public List<DiscoveredEvent> search(String query) {
                 return events;
+            }
+        };
+    }
+
+    private static EventProvider nullReturningProvider() {
+        return new EventProvider() {
+            @Override
+            public String name() {
+                return "Null";
+            }
+
+            @Override
+            public boolean isConfigured() {
+                return true;
+            }
+
+            @Override
+            public List<DiscoveredEvent> search(String query) {
+                return null;
             }
         };
     }
@@ -76,7 +94,23 @@ class DiscoveryServiceTest {
     }
 
     @Test
-    @Tag("bug")
+    void searchReturnsEmptyForNullQuery() {
+        DiscoveryService service = new DiscoveryService(List.of(provider(true, List.of())));
+
+        assertThat(service.search(null)).isEmpty();
+    }
+
+    @Test
+    void searchIgnoresProviderThatReturnsNullResults() {
+        DiscoveredEvent event = event("Healthy", "1", "https://events.test/1", "2026-06-01T09:00:00Z");
+        DiscoveryService service = new DiscoveryService(List.of(
+                nullReturningProvider(),
+                provider(true, List.of(event))));
+
+        assertThat(service.search("jazz")).containsExactly(event);
+    }
+
+    @Test
     void searchContinuesWhenOneConfiguredProviderThrows() {
         DiscoveredEvent event = event("Healthy", "1", "https://events.test/1", "2026-06-01T09:00:00Z");
         DiscoveryService service = new DiscoveryService(List.of(

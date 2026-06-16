@@ -30,9 +30,25 @@ public class SeatGeekProvider implements EventProvider {
         this.http = RestClient.builder().baseUrl("https://api.seatgeek.com/2").build();
     }
 
-    @Override public String name() { return "SeatGeek"; }
+    private static Instant parseStart(SgEvent e) {
+        // SeatGeek returns datetime_utc as ISO-8601 without a zone designator; treat as UTC.
+        if (e.datetimeUtc == null) return null;
+        try {
+            return LocalDateTime.parse(e.datetimeUtc).toInstant(ZoneOffset.UTC);
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
 
-    @Override public boolean isConfigured() { return clientId != null && !clientId.isBlank(); }
+    @Override
+    public String name() {
+        return "SeatGeek";
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return clientId != null && !clientId.isBlank();
+    }
 
     @Override
     public List<DiscoveredEvent> search(String query) {
@@ -66,28 +82,26 @@ public class SeatGeekProvider implements EventProvider {
         }
     }
 
-    private static Instant parseStart(SgEvent e) {
-        // SeatGeek returns datetime_utc as ISO-8601 without a zone designator; treat as UTC.
-        if (e.datetimeUtc == null) return null;
-        try {
-            return LocalDateTime.parse(e.datetimeUtc).toInstant(ZoneOffset.UTC);
-        } catch (Exception ignored) {
-            return null;
-        }
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    static class Response {
+        public List<SgEvent> events;
     }
 
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    static class Response { public List<SgEvent> events; }
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class SgEvent {
         public long id;
         public String title;
-        @JsonProperty("short_title") public String shortTitle;
-        @JsonProperty("datetime_utc") public String datetimeUtc;
+        @JsonProperty("short_title")
+        public String shortTitle;
+        @JsonProperty("datetime_utc")
+        public String datetimeUtc;
         public String url;
         public String description;
         public SgVenue venue;
     }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class SgVenue { public String name; }
+    static class SgVenue {
+        public String name;
+    }
 }

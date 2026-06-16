@@ -31,9 +31,10 @@ public class Meeting {
     private User organizer;
 
     @OneToMany(mappedBy = "meeting", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Set<MeetingParticipant> participants = new HashSet<>();
+    private final Set<MeetingParticipant> participants = new HashSet<>();
 
-    protected Meeting() {}
+    protected Meeting() {
+    }
 
     public Meeting(String title, String description, Instant startTime, Instant endTime, User organizer) {
         this.title = title;
@@ -43,22 +44,57 @@ public class Meeting {
         this.organizer = organizer;
     }
 
-    public Long getId() { return id; }
-    public String getTitle() { return title; }
-    public String getDescription() { return description; }
-    public Instant getStartTime() { return startTime; }
-    public Instant getEndTime() { return endTime; }
-    public User getOrganizer() { return organizer; }
-    public Set<MeetingParticipant> getParticipants() { return participants; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setTitle(String title) { this.title = title; }
-    public void setDescription(String description) { this.description = description; }
-    public void setStartTime(Instant startTime) { this.startTime = startTime; }
-    public void setEndTime(Instant endTime) { this.endTime = endTime; }
+    public String getTitle() {
+        return title;
+    }
 
-    public void addParticipant(MeetingParticipant participant) { this.participants.add(participant); }
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-    /** A meeting is confirmed when every invited participant (including the organizer) has accepted. */
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Instant getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(Instant startTime) {
+        this.startTime = startTime;
+    }
+
+    public Instant getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime = endTime;
+    }
+
+    public User getOrganizer() {
+        return organizer;
+    }
+
+    public Set<MeetingParticipant> getParticipants() {
+        return participants;
+    }
+
+    public void addParticipant(MeetingParticipant participant) {
+        this.participants.add(participant);
+    }
+
+    /**
+     * A meeting is confirmed when every invited participant (including the organizer) has accepted.
+     */
     public boolean isConfirmed() {
         if (participants.isEmpty()) return false;
         return participants.stream().allMatch(p -> p.getStatus() == InviteStatus.ACCEPTED);

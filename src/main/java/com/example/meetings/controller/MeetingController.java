@@ -4,6 +4,7 @@ import com.example.meetings.model.InviteStatus;
 import com.example.meetings.model.User;
 import com.example.meetings.service.MeetingService;
 import com.example.meetings.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,11 +12,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 @Controller
 public class MeetingController {
@@ -26,6 +29,15 @@ public class MeetingController {
     public MeetingController(MeetingService meetingService, UserService userService) {
         this.meetingService = meetingService;
         this.userService = userService;
+    }
+
+    private static InviteStatus responseStatus(String action) {
+        String normalized = action == null ? "" : action.trim().toLowerCase(Locale.ROOT);
+        return switch (normalized) {
+            case "accept" -> InviteStatus.ACCEPTED;
+            case "decline" -> InviteStatus.DECLINED;
+            default -> throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unknown invite response action");
+        };
     }
 
     @GetMapping("/meetings/new")
@@ -68,10 +80,15 @@ public class MeetingController {
                           @PathVariable Long id,
                           @RequestParam String action) {
         User user = userService.requireByUsername(principal.getUsername());
-        InviteStatus status = "accept".equalsIgnoreCase(action)
-                ? InviteStatus.ACCEPTED
-                : InviteStatus.DECLINED;
-        meetingService.respond(id, user, status);
+        InviteStatus status = responseStatus(action);
+        try {
+            meetingService.respond(id, user, status);
+        } catch (IllegalArgumentException ex) {
+            if ("No invite found for this user".equals(ex.getMessage())) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, ex.getMessage(), ex);
+            }
+            throw ex;
+        }
         return "redirect:/calendar";
     }
 }

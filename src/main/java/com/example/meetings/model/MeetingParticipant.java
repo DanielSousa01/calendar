@@ -23,7 +23,8 @@ public class MeetingParticipant {
     @Column(nullable = false)
     private InviteStatus status;
 
-    protected MeetingParticipant() {}
+    protected MeetingParticipant() {
+    }
 
     public MeetingParticipant(Meeting meeting, User user, InviteStatus status) {
         this.meeting = meeting;
@@ -31,10 +32,23 @@ public class MeetingParticipant {
         this.status = status;
     }
 
-    public Long getId() { return id; }
-    public Meeting getMeeting() { return meeting; }
-    public User getUser() { return user; }
-    public InviteStatus getStatus() { return status; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setStatus(InviteStatus status) { this.status = status; }
+    public Meeting getMeeting() {
+        return meeting;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public InviteStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(InviteStatus status) {
+        this.status = status;
+    }
 }

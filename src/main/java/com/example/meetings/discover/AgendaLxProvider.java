@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
  * Lisbon's "Agenda Cultural" via the AgendaLx WordPress REST API. The endpoint is referenced
  * from dados.gov.pt (Município de Lisboa dataset) and exposes ~thousands of curated cultural
  * events — concerts, exhibitions, theatre, guided tours — that you won't find on Ticketmaster.
- *
+ * <p>
  * No API key required, but the host blocks requests with default UAs (returns RST), so we send
  * a browser-style User-Agent. Times are only partially structured (string_times like "qua: 21h30");
  * we parse the first hh'h'mm match and fall back to 20:00 Europe/Lisbon when nothing parses.
@@ -45,49 +45,6 @@ public class AgendaLxProvider implements EventProvider {
                 .build();
     }
 
-    @Override public String name() { return "Agenda Cultural de Lisboa"; }
-
-    @Override public boolean isConfigured() { return true; } // public endpoint, no creds
-
-    @Override
-    public List<DiscoveredEvent> search(String query) {
-        String path = UriComponentsBuilder.fromPath("/events")
-                .queryParam("search", query)
-                .queryParam("per_page", 20)
-                .toUriString();
-        try {
-            List<AlxEvent> raw = http.get()
-                    .uri(path)
-                    .retrieve()
-                    .onStatus(HttpStatusCode::isError, (req, res) ->
-                            log.warn("AgendaLx search failed: {}", res.getStatusCode()))
-                    .body(new ParameterizedTypeReference<>() {});
-            if (raw == null) return List.of();
-            LocalTime fallback = LocalTime.of(20, 0);
-            List<DiscoveredEvent> results = new ArrayList<>();
-            for (AlxEvent e : raw) {
-                LocalDate date = nextOccurrence(e.occurences);
-                if (date == null) continue; // all dates in the past
-                LocalTime time = parseTime(e.stringTimes).orElse(fallback);
-                String title = e.title != null ? e.title.rendered : null;
-                if (title == null || title.isBlank()) continue;
-                results.add(new DiscoveredEvent(
-                        name(),
-                        String.valueOf(e.id),
-                        title,
-                        joinDescription(e.description),
-                        date.atTime(time).atZone(LISBON).toInstant(),
-                        null,
-                        e.link,
-                        firstVenueName(e.venue)));
-            }
-            return results;
-        } catch (Exception ex) {
-            log.warn("AgendaLx search threw", ex);
-            return List.of();
-        }
-    }
-
     private static LocalDate nextOccurrence(List<String> occurences) {
         if (occurences == null || occurences.isEmpty()) return null;
         LocalDate today = LocalDate.now(LISBON);
@@ -95,7 +52,8 @@ public class AgendaLxProvider implements EventProvider {
             try {
                 LocalDate d = LocalDate.parse(s);
                 if (!d.isBefore(today)) return d;
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         return null;
     }
@@ -132,6 +90,56 @@ public class AgendaLxProvider implements EventProvider {
         return joined.length() > 600 ? joined.substring(0, 600) + "…" : joined;
     }
 
+    @Override
+    public String name() {
+        return "Agenda Cultural de Lisboa";
+    }
+
+    @Override
+    public boolean isConfigured() {
+        return true;
+    } // public endpoint, no creds
+
+    @Override
+    public List<DiscoveredEvent> search(String query) {
+        String path = UriComponentsBuilder.fromPath("/events")
+                .queryParam("search", query)
+                .queryParam("per_page", 20)
+                .toUriString();
+        try {
+            List<AlxEvent> raw = http.get()
+                    .uri(path)
+                    .retrieve()
+                    .onStatus(HttpStatusCode::isError, (req, res) ->
+                            log.warn("AgendaLx search failed: {}", res.getStatusCode()))
+                    .body(new ParameterizedTypeReference<>() {
+                    });
+            if (raw == null) return List.of();
+            LocalTime fallback = LocalTime.of(20, 0);
+            List<DiscoveredEvent> results = new ArrayList<>();
+            for (AlxEvent e : raw) {
+                LocalDate date = nextOccurrence(e.occurences);
+                if (date == null) continue; // all dates in the past
+                LocalTime time = parseTime(e.stringTimes).orElse(fallback);
+                String title = e.title != null ? e.title.rendered : null;
+                if (title == null || title.isBlank()) continue;
+                results.add(new DiscoveredEvent(
+                        name(),
+                        String.valueOf(e.id),
+                        title,
+                        joinDescription(e.description),
+                        date.atTime(time).atZone(LISBON).toInstant(),
+                        null,
+                        e.link,
+                        firstVenueName(e.venue)));
+            }
+            return results;
+        } catch (Exception ex) {
+            log.warn("AgendaLx search threw", ex);
+            return List.of();
+        }
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
     static class AlxEvent {
         public long id;
@@ -143,8 +151,14 @@ public class AgendaLxProvider implements EventProvider {
         public String link;
         public Map<String, AlxVenue> venue;
     }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class AlxTitle { public String rendered; }
+    static class AlxTitle {
+        public String rendered;
+    }
+
     @JsonIgnoreProperties(ignoreUnknown = true)
-    static class AlxVenue { public String name; }
+    static class AlxVenue {
+        public String name;
+    }
 }

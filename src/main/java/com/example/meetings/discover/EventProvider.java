@@ -3,10 +3,14 @@ package com.example.meetings.discover;
 import java.util.List;
 
 public interface EventProvider {
-    /** Human-readable name shown in the UI ("Ticketmaster", "SeatGeek"). */
+    /**
+     * Human-readable name shown in the UI ("Ticketmaster", "SeatGeek").
+     */
     String name();
 
-    /** True when this provider has been configured (e.g. has an API key). */
+    /**
+     * True when this provider has been configured (e.g. has an API key).
+     */
     boolean isConfigured();
 
     /**

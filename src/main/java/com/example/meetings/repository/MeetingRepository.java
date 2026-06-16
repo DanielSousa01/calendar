@@ -24,7 +24,9 @@ public interface MeetingRepository extends JpaRepository<Meeting, Long> {
             """)
     List<Meeting> findCalendarMeetings(@Param("user") User user);
 
-    /** Used for conflict detection — same filter as above, restricted to a time window. */
+    /**
+     * Used for conflict detection — same filter as above, restricted to a time window.
+     */
     @Query("""
             select distinct m from Meeting m
             left join m.participants p

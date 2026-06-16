@@ -19,6 +19,35 @@ public class ICalService {
     private static final DateTimeFormatter ICAL_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(ZoneOffset.UTC);
 
+    private static String partStat(com.example.meetings.model.InviteStatus status) {
+        return switch (status) {
+            case ACCEPTED -> "ACCEPTED";
+            case DECLINED -> "DECLINED";
+            case PENDING -> "NEEDS-ACTION";
+        };
+    }
+
+    private static void appendLine(StringBuilder sb, String line) {
+        while (line.length() > 75) {
+            sb.append(line, 0, 75).append("\r\n");
+            line = " " + line.substring(75);
+        }
+        sb.append(line).append("\r\n");
+    }
+
+    /**
+     * Escape per RFC 5545 §3.3.11.
+     */
+    private static String escape(String value) {
+        if (value == null) return "";
+        return value
+                .replace("\\", "\\\\")
+                .replace(";", "\\;")
+                .replace(",", "\\,")
+                .replace("\n", "\\n")
+                .replace("\r", "");
+    }
+
     public String render(User owner, List<Meeting> meetings) {
         StringBuilder sb = new StringBuilder();
         // iCalendar uses CRLF line endings per RFC 5545.
@@ -53,28 +82,5 @@ public class ICalService {
 
         appendLine(sb, "END:VCALENDAR");
         return sb.toString();
-    }
-
-    private static String partStat(com.example.meetings.model.InviteStatus status) {
-        return switch (status) {
-            case ACCEPTED -> "ACCEPTED";
-            case DECLINED -> "DECLINED";
-            case PENDING -> "NEEDS-ACTION";
-        };
-    }
-
-    private static void appendLine(StringBuilder sb, String line) {
-        sb.append(line).append("\r\n");
-    }
-
-    /** Escape per RFC 5545 §3.3.11. */
-    private static String escape(String value) {
-        if (value == null) return "";
-        return value
-                .replace("\\", "\\\\")
-                .replace(";", "\\;")
-                .replace(",", "\\,")
-                .replace("\n", "\\n")
-                .replace("\r", "");
     }
 }

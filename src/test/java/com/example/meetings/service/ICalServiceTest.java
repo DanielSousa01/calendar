@@ -4,7 +4,6 @@ import com.example.meetings.model.InviteStatus;
 import com.example.meetings.model.Meeting;
 import com.example.meetings.model.MeetingParticipant;
 import com.example.meetings.model.User;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -16,6 +15,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class ICalServiceTest {
 
     private final ICalService service = new ICalService();
+
+    private static Meeting meeting(Long id, String title, User organizer) {
+        Meeting meeting = new Meeting(
+                title,
+                "",
+                Instant.parse("2026-06-01T10:00:00Z"),
+                Instant.parse("2026-06-01T11:00:00Z"),
+                organizer);
+        ReflectionTestUtils.setField(meeting, "id", id);
+        return meeting;
+    }
 
     @Test
     void renderEscapesIcalTextFieldsAndUsesCrlfLineEndings() {
@@ -74,7 +84,6 @@ class ICalServiceTest {
     }
 
     @Test
-    @Tag("bug")
     void renderFoldsLongContentLinesAtSeventyFiveCharacters() {
         User alice = new User("alice", "alice@example.com", "hash");
         Meeting meeting = meeting(
@@ -87,16 +96,5 @@ class ICalServiceTest {
 
         assertThat(ical.split("\r\n"))
                 .allSatisfy(line -> assertThat(line.length()).isLessThanOrEqualTo(75));
-    }
-
-    private static Meeting meeting(Long id, String title, User organizer) {
-        Meeting meeting = new Meeting(
-                title,
-                "",
-                Instant.parse("2026-06-01T10:00:00Z"),
-                Instant.parse("2026-06-01T11:00:00Z"),
-                organizer);
-        ReflectionTestUtils.setField(meeting, "id", id);
-        return meeting;
     }
 }

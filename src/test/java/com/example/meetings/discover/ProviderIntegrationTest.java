@@ -1,7 +1,6 @@
 package com.example.meetings.discover;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Tag;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -19,6 +18,24 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 class ProviderIntegrationTest {
+
+    private static TicketmasterProvider ticketmasterProvider(String apiKey, String countryCode, RestClient http) {
+        TicketmasterProvider provider = new TicketmasterProvider(apiKey, countryCode);
+        ReflectionTestUtils.setField(provider, "http", http);
+        return provider;
+    }
+
+    private static SeatGeekProvider seatGeekProvider(String clientId, RestClient http) {
+        SeatGeekProvider provider = new SeatGeekProvider(clientId);
+        ReflectionTestUtils.setField(provider, "http", http);
+        return provider;
+    }
+
+    private static AgendaLxProvider agendaLxProvider(RestClient http) {
+        AgendaLxProvider provider = new AgendaLxProvider();
+        ReflectionTestUtils.setField(provider, "http", http);
+        return provider;
+    }
 
     @Test
     void ticketmasterProviderMapsDiscoveryResponse() {
@@ -55,7 +72,6 @@ class ProviderIntegrationTest {
     }
 
     @Test
-    @Tag("bug")
     void ticketmasterProviderEncodesQueryParameters() {
         RestClient.Builder builder = RestClient.builder().baseUrl("https://ticketmaster.test");
         MockRestServiceServer server = MockRestServiceServer.bindTo(builder).build();
@@ -283,23 +299,5 @@ class ProviderIntegrationTest {
 
         assertThat(provider.search("theatre")).isEmpty();
         server.verify();
-    }
-
-    private static TicketmasterProvider ticketmasterProvider(String apiKey, String countryCode, RestClient http) {
-        TicketmasterProvider provider = new TicketmasterProvider(apiKey, countryCode);
-        ReflectionTestUtils.setField(provider, "http", http);
-        return provider;
-    }
-
-    private static SeatGeekProvider seatGeekProvider(String clientId, RestClient http) {
-        SeatGeekProvider provider = new SeatGeekProvider(clientId);
-        ReflectionTestUtils.setField(provider, "http", http);
-        return provider;
-    }
-
-    private static AgendaLxProvider agendaLxProvider(RestClient http) {
-        AgendaLxProvider provider = new AgendaLxProvider();
-        ReflectionTestUtils.setField(provider, "http", http);
-        return provider;
     }
 }

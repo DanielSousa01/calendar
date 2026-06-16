@@ -8,7 +8,6 @@ import com.example.meetings.repository.MeetingParticipantRepository;
 import com.example.meetings.repository.MeetingRepository;
 import com.example.meetings.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -43,6 +42,15 @@ class RestApiIntegrationTest {
     private MeetingRepository meetingRepository;
     @Autowired
     private MeetingParticipantRepository participantRepository;
+
+    private static Meeting meeting(String title, User organizer) {
+        return new Meeting(
+                title,
+                "",
+                Instant.parse("2026-06-01T10:00:00Z"),
+                Instant.parse("2026-06-01T11:00:00Z"),
+                organizer);
+    }
 
     @BeforeEach
     void cleanDatabase() {
@@ -127,7 +135,6 @@ class RestApiIntegrationTest {
 
     @Test
     @WithMockUser(username = "bob")
-    @Tag("bug")
     void respondAcceptsOnlyKnownActions() throws Exception {
         User alice = userRepository.save(new User("alice", "alice@example.com", "hash"));
         User bob = userRepository.save(new User("bob", "bob@example.com", "hash"));
@@ -144,7 +151,6 @@ class RestApiIntegrationTest {
 
     @Test
     @WithMockUser(username = "charlie")
-    @Tag("bug")
     void userCannotRespondToSomeoneElsesInvite() throws Exception {
         User alice = userRepository.save(new User("alice", "alice@example.com", "hash"));
         User bob = userRepository.save(new User("bob", "bob@example.com", "hash"));
@@ -235,14 +241,5 @@ class RestApiIntegrationTest {
                 .andExpect(status().isForbidden());
 
         assertThat(meetingRepository.findAll()).isEmpty();
-    }
-
-    private static Meeting meeting(String title, User organizer) {
-        return new Meeting(
-                title,
-                "",
-                Instant.parse("2026-06-01T10:00:00Z"),
-                Instant.parse("2026-06-01T11:00:00Z"),
-                organizer);
     }
 }

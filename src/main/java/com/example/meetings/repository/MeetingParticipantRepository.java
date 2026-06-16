@@ -10,5 +10,6 @@ import java.util.Optional;
 
 public interface MeetingParticipantRepository extends JpaRepository<MeetingParticipant, Long> {
     List<MeetingParticipant> findByUserAndStatus(User user, InviteStatus status);
+
     Optional<MeetingParticipant> findByMeetingIdAndUserId(Long meetingId, Long userId);
 }

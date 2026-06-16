@@ -21,11 +21,14 @@ public class User {
     @Column(nullable = false)
     private String passwordHash;
 
-    /** Opaque token used to expose a per-user iCal feed without requiring auth on the calendar URL. */
+    /**
+     * Opaque token used to expose a per-user iCal feed without requiring auth on the calendar URL.
+     */
     @Column(nullable = false, unique = true)
     private String icalToken;
 
-    protected User() {}
+    protected User() {
+    }
 
     public User(String username, String email, String passwordHash) {
         this.username = username;
@@ -34,12 +37,31 @@ public class User {
         this.icalToken = UUID.randomUUID().toString();
     }
 
-    public Long getId() { return id; }
-    public String getUsername() { return username; }
-    public String getEmail() { return email; }
-    public String getPasswordHash() { return passwordHash; }
-    public String getIcalToken() { return icalToken; }
+    public Long getId() {
+        return id;
+    }
 
-    public void setEmail(String email) { this.email = email; }
-    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPasswordHash() {
+        return passwordHash;
+    }
+
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
+    }
+
+    public String getIcalToken() {
+        return icalToken;
+    }
 }
