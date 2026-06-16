@@ -3,14 +3,21 @@
 The command used for verification was:
 
 \texttt{mvn test}
-\\
-The command used to run the defect-demonstration tests was:
-
-\texttt{mvn -Pbug-tests test}
 
 \section{Local Verification Walkthrough}
 
-The default local verification command compiles the application, compiles the test sources, starts the required Spring contexts, runs the service unit tests, provider integration tests, REST/API integration tests, repository integration tests, and the Selenium end-to-end test. It excludes tests tagged with \texttt{@Tag("bug")} and is expected to pass. The separate \texttt{bug-tests} profile runs only the known defect tests, which are expected to fail until the application implementation is corrected.
+The local verification command compiles the application, compiles the test sources, starts the required Spring contexts, runs the service unit tests, provider integration tests, REST/API integration tests, repository integration tests, and the Selenium end-to-end test.
+
+The defect-detection tests run in this same default suite, so the corrected behaviors are verified together with the rest of the application.
+
+The local verification run completed successfully:
+
+\begin{itemize}
+\item \texttt{Tests run: 61}
+\item \texttt{Failures: 0}
+\item \texttt{Errors: 0}
+\item \texttt{Skipped: 0}
+\end{itemize}
 
 \section{Continuous Integration}
  
@@ -20,24 +27,8 @@ The CI job runs on an Ubuntu GitHub-hosted runner. It first checks out the repos
 
 \texttt{mvn clean test}
 
-This command compiles the Spring Boot application and runs the default automated regression suite, including unit tests, integration tests, repository tests, REST/API tests, and the Selenium end-to-end test. The CI result is therefore used as branch-level evidence that the test suite runs in a clean environment outside the developer machine.
+This command compiles the Spring Boot application and runs the full automated regression suite, including unit tests, integration tests, repository tests, REST/API tests, defect detection scenarios, and the Selenium end-to-end test. The CI result is therefore used as branch-level evidence that the test suite runs in a clean environment outside the developer machine.
 
-The expected result for this branch is that CI completes the setup steps and passes the same default test suite as the local verification run: 38 tests executed, with 38 passing tests and no failures or errors. This confirms that the branch contains automated CI configuration for the normal regression suite.
-
-The defect-demonstration profile is intentionally red because several tests expose known implementation bugs. The latest \texttt{mvn -Pbug-tests test} run executed nine tests: seven failed by assertion and two errored at implementation bug points. The expected failing or erroring tests are:
-
-\begin{itemize}
-\item \texttt{ProviderIntegrationTest.ticketmasterProviderEncodesQueryParameters}
-\item \texttt{DiscoveryServiceTest.searchContinuesWhenOneConfiguredProviderThrows}
-\item \texttt{ICalServiceTest.renderFoldsLongContentLinesAtSeventyFiveCharacters}
-\item \texttt{UserServiceTest.registerRejectsBlankRequiredFieldsServerSide}
-\item \texttt{MeetingServiceTest.proposeRejectsOrganizerOverlapBeforeSaving}
-\item \texttt{MeetingServiceTest.proposeRejectsInviteeOverlapBeforeSaving}
-\item \texttt{MeetingServiceTest.copyFromDiscoveredRejectsUserOverlap}
-\item \texttt{RestApiIntegrationTest.respondAcceptsOnlyKnownActions}
-\item \texttt{RestApiIntegrationTest.userCannotRespondToSomeoneElsesInvite}
-\end{itemize}
-
-All default tests passed. In particular, the repository integration tests, the non-bug-revealing provider tests, the non-bug-revealing REST tests, the passing service tests, and the Selenium end-to-end workflow completed successfully.
+The expected result for this branch is that CI completes the setup steps and passes the same suite as the local verification run: 61 tests executed, with 61 passing tests and no failures or errors.
 
 The Selenium end-to-end test is included in the full run and passed. It starts an embedded Spring Boot web server on a random local port and launches headless Chrome through ChromeDriver.

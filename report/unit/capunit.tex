@@ -36,7 +36,7 @@ The discovered-event copy walkthrough is:
 \item Assert that a missing end time defaults to two hours, the source and venue are preserved in the description, the user is the only accepted participant, and overlapping imports should be rejected.
 \end{enumerate}
 
-Together, these tests cover valid and invalid meeting time windows, unknown invitees, organizer auto-acceptance, duplicate and blank invitee filtering, invite response validation, missing invites, discovered event imports, default event duration, and iCal-token lookup. Repositories are mocked so each test can state exactly which repository calls are expected and whether saving should happen. This makes missing overlap checks visible: the current implementation saves meetings without querying for organizer or invitee overlaps, and saves copied discovered events without checking the user's calendar.
+Together, these tests cover valid and invalid meeting time windows, unknown invitees, organizer auto-acceptance, duplicate and blank invitee filtering, invite response validation, missing invites, discovered event imports, default event duration, and iCal-token lookup. Repositories are mocked so each test can state exactly which repository calls are expected and whether saving should happen. The overlap tests verify that organizer conflicts, invitee conflicts, and discovered-event conflicts are rejected before persistence.
 
 \section{ICalService}
 
@@ -51,7 +51,7 @@ The rendering walkthrough is:
 \item Assert the VCALENDAR text directly: escaping, CRLF line endings, UTC date formatting, attendee \texttt{PARTSTAT}, and meeting \texttt{STATUS}.
 \end{enumerate}
 
-Together, these tests cover iCalendar text escaping, CRLF line endings, UTC date rendering, tentative versus confirmed meeting status, declined attendee \texttt{PARTSTAT} rendering, and RFC 5545 long line folding. The long line folding test is tagged as a bug-revealing test. When run with \texttt{mvn -Pbug-tests test}, it fails and reveals that \texttt{ICalService} appends long fields directly instead of folding them.
+Together, these tests cover iCalendar text escaping, CRLF line endings, UTC date rendering, tentative versus confirmed meeting status, declined attendee \texttt{PARTSTAT} rendering, and RFC 5545 long line folding. The long line folding test guards the corrected \texttt{ICalService} folding behavior.
 
 \section{UserService}
 
@@ -59,4 +59,4 @@ The \texttt{UserServiceTest} class verifies registration behavior with a mocked 
 
 The walkthrough is deliberately small: the test calls \texttt{UserService.register("", "", "")}, expects an \texttt{IllegalArgumentException}, and verifies that \texttt{UserRepository.save(...)} is never called. This is a server-side validation check, not a browser check.
 
-This test is also tagged as bug revealing. When run with \texttt{mvn -Pbug-tests test}, it fails because \texttt{UserService.register(...)} only checks duplicate usernames and then saves the user with the encoded password. Browser-side \texttt{required} attributes are not sufficient validation because direct HTTP clients can bypass them.
+The registration validation tests verify that \texttt{UserService.register(...)} rejects blank required fields before duplicate checks, password encoding, or persistence. Browser-side \texttt{required} attributes are still useful, but the server-side validation protects direct HTTP clients as well.

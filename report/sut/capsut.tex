@@ -1,7 +1,6 @@
-\chapter{Application Walkthrough and SUT Modifications} \label{cap:sut}
+\chapter{Application Walkthrough and SUT Corrections} \label{cap:sut}
 
-The assignment allows adapting the system under test when necessary, provided the final report lists and justifies those changes. For this submission, the application code was not changed to make the bug-detecting tests pass. The production implementation under \texttt{src/main
-/java}, the Thymeleaf pages under \texttt{src/main/resources/templates}, the stylesheet under \texttt{src/main/resources/static}, and the application configuration are evaluated as they exist in the project. The observed implementation defects are intentionally left visible through bug-tagged tests that are run separately from the default CI suite.
+The assignment allows adapting the system under test when necessary, provided the final report lists and justifies those changes. For this submission, the production implementation under \texttt{src/main/java} includes targeted corrections for the defects exposed by the automated tests. The Thymeleaf pages under \texttt{src/main/resources/templates}, the stylesheet under \texttt{src/main/resources/static}, and the application configuration do not require changes for these corrections.
 
 \section{Application Structure}
 
@@ -28,9 +27,20 @@ The calendar flow uses \texttt{MeetingService.calendarFor(...)} and \texttt{pend
 
 The discovery flow starts at \texttt{/discover}. \texttt{DiscoveryService} queries configured providers, deduplicates events by URL, and sorts the resulting \texttt{DiscoveredEvent} values by start time. Copying a discovered event posts to \texttt{/discover/copy}, where the selected event fields are converted into a confirmed single-participant meeting for the current user.
 
-\section{Modification Policy}
+\section{Correction Policy}
 
-No changes were made to the application implementation to hide or repair the detected defects. This matters for the assessment because the bug-tagged tests describe behavior that should be fixed in production code later, but the current submission keeps those failures as separately executable evidence.
+The production changes are limited to the behavior covered by the defect detection tests:
+
+\begin{itemize}
+\item \texttt{MeetingService} rejects organizer, invitee, and discovered event calendar overlaps before saving.
+\item \texttt{ICalService} folds long iCalendar content lines at the RFC 5545 line length boundary.
+\item \texttt{UserService} rejects blank username, email, and password values on the server side.
+\item \texttt{MeetingController} rejects unknown invite response actions with \texttt{400 Bad Request} and maps missing invites to \texttt{404 Not Found}.
+\item \texttt{TicketmasterProvider} builds request URIs through \texttt{RestClient}'s URI builder so query parameters are encoded exactly once.
+\item \texttt{DiscoveryService} skips a failing provider and continues aggregating results from healthy providers.
+\end{itemize}
+
+These corrected behaviors are exercised by ordinary regression tests in the default Maven suite.
 
 The following non-production changes and test harness choices were necessary to keep the tests deterministic and isolated:
 
@@ -39,8 +49,7 @@ The following non-production changes and test harness choices were necessary to 
 \item Provider tests replace each provider's private \texttt{RestClient} with \texttt{ReflectionTestUtils}. This keeps production constructors unchanged while allowing deterministic HTTP integration tests with \texttt{MockRestServiceServer}.
 \item REST tests configure an isolated H2 database instead of using the file-backed local database.
 \item Selenium tests configure a separate H2 database and random application port.
-\item Bug-revealing tests are tagged with \texttt{@Tag("bug")}. The default Maven and CI runs exclude this tag so the normal regression suite stays green, \texttt{mvn -Pbug-tests test} runs only those defect demonstrations.
-\item \texttt{src/test/resources/mockito-extensions/org.mockito.plugins.MockMaker} selects Mockito's subclass mock maker. This avoids Java 25 inline-agent problems in the local verification environment while preserving ordinary Mockito behavior for the tests used here.
+\item Defect detection tests run with the default Maven suite so the corrected behaviors are verified continuously.
 \end{itemize}
 
-These choices affect the test harness, build configuration, CI, and documentation. They do not change the production behavior being evaluated.
+These choices affect the test harness, build configuration, CI, and documentation. The production behavior changes are the scoped bug fixes listed above.

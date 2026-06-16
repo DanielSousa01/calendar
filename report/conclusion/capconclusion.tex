@@ -4,4 +4,4 @@ The test suite covers the main testing categories requested in the assignment: u
 
 The testing decisions prioritize isolation where useful and realism where necessary. Business rules are tested with mocks, provider integrations use simulated HTTP servers, repository behavior is verified with H2, REST behavior runs through the Spring web stack, and the main user journey is validated through a real browser.
 
-The suite also detects current implementation defects. The known defects are intentionally documented and exposed by automated tests, including provider encoding, provider aggregation robustness, iCalendar compatibility, registration validation, overlap validation, and invite response error handling. Once those production bugs are fixed, the same tests can serve as a regression suite for future commits.
+The suite also guards the detected defects and their corrections: provider encoding, provider aggregation robustness, iCalendar compatibility, registration validation, overlap validation, and invite response error handling. Those scenarios run in the default Maven suite and serve as regression coverage for future commits.

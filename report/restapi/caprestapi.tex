@@ -4,6 +4,8 @@ REST API integration tests are implemented under the controller test package. Th
 
 These tests run the full Spring context and exercise HTTP behavior through \texttt{MockMvc}. This level was chosen for web concerns that unit tests cannot fully represent: Spring Security, CSRF, request routing, controller-to-service wiring, redirects, status codes, and rendered response content.
 
+Additional direct controller tests in \texttt{DiscoveryControllerTest} and \texttt{MeetingControllerTest} complement the integration tests by exercising branch-heavy controller decisions without depending on external discovery providers or a full Spring context.
+
 \section{Test Context}
 
 The test class is annotated with \texttt{@SpringBootTest} and \texttt{@AutoConfigureMockMvc}. It uses a test only H2 database configured with \texttt{@TestPropertySource}. Before each test, repositories are cleared so every scenario starts from a known state. Authentication is simulated with \texttt{@WithMockUser} when a logged-in user is required, and CSRF tokens are added with \texttt{csrf()} when the request should represent a valid form submission.
@@ -25,4 +27,4 @@ The tested HTTP flows are:
 
 Together, these tests cover authentication boundaries, registration, CSRF protection, calendar rendering, iCal feed access, invite responses, meeting proposal validation, and copying discovered events. The tests use an in memory H2 database configured specifically for the REST test context. This keeps the tests close to real application behavior while avoiding the production database.
 
-Two REST tests are intentionally bug revealing. \texttt{respondAcceptsOnlyKnownActions} expects unknown actions such as \texttt{maybe} to return \texttt{400 Bad Request}, the current controller maps every non-\texttt{accept} value to \texttt{DECLINED}. \texttt{userCannotRespondToSomeoneElsesInvite} expects a clean \texttt{404 Not Found} response when the authenticated user has no invite for that meeting, the current exception is not translated into an HTTP response.
+Two REST tests cover corrected invite response error handling. \texttt{respondAcceptsOnlyKnownActions} expects unknown actions such as \texttt{maybe} to return \texttt{400 Bad Request}. \texttt{userCannotRespondToSomeoneElsesInvite} expects a clean \texttt{404 Not Found} response when the authenticated user has no invite for that meeting. Both behaviors are implemented through explicit controller side HTTP status mapping.

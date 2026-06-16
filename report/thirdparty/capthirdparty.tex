@@ -31,10 +31,10 @@ SeatGeek tests verify mapping from the events response, fallback from \texttt{ti
 
 AgendaLx tests verify the public endpoint mapping, the configured user agent, filtering of past occurrences, filtering of blank titles, fallback to 20:00 Europe/Lisbon when no time can be parsed, and HTTP error handling. These cases are important because this provider has a different JSON shape and does not require credentials, making it the default discovery source when the other providers are not configured.
 
-The Ticketmaster query encoding test is tagged as bug revealing. It asserts that query parameters such as spaces should be encoded exactly once, but the current provider produces \texttt{\%2520}, showing that an already-encoded value is encoded a second time.
+The Ticketmaster query encoding test asserts that query parameters such as spaces are encoded exactly once. The provider lets \texttt{RestClient}'s URI builder encode the query values, preventing \texttt{\%2520} double-encoding.
 
 \section{DiscoveryService Aggregation}
 
-The discovery level provider aggregation behavior is tested separately in \texttt{DiscoveryServiceTest}. This class does not test HTTP, instead, it uses small in memory \texttt{EventProvider} implementations to focus on aggregation rules. It verifies that blank queries return no results, unconfigured providers are skipped, duplicate URLs are removed, and results are sorted by start time.
+The discovery level provider aggregation behavior is tested separately in \texttt{DiscoveryServiceTest}. This class uses small in memory \texttt{EventProvider} implementations to focus on aggregation rules without HTTP setup. It verifies that blank queries return no results, unconfigured providers are skipped, duplicate URLs are removed, and results are sorted by start time.
 
-The bug revealing aggregation test verifies that an outage in one configured provider should not prevent results from other providers. When run with \texttt{mvn -Pbug-tests test}, it errors because \texttt{DiscoveryService} does not catch provider exceptions.
+The aggregation test verifies that an outage in one configured provider does not prevent results from other providers. \texttt{DiscoveryService} catches provider failures, skips the failed provider, and continues merging healthy provider results.
